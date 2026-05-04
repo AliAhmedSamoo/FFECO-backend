@@ -1,8 +1,8 @@
 const express = require('express');
 const Batch = require('../modulesDB/batch')
-const Fish = require('../modulesDB/Fish')
-const item = require('../modulesDB/Items')
-const Vendor = require('../modulesDB/Vendor')
+const Fish = require('../modulesDB/fish')
+const item = require('../modulesDB/items')
+const Vendor = require('../modulesDB/vendor')
 const VerifiedFishes = require('../modulesDB/verifiedFishes')
 const router = express.Router();
 

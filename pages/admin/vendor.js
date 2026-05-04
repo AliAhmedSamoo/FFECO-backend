@@ -1,5 +1,5 @@
 const express = require('express');
-const Vendor = require('../../modulesDB/Vendor');
+const Vendor = require('../../modulesDB/vendor');
 const router = express.Router();
 
 // POST route to add a vendor
