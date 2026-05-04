@@ -45,6 +45,7 @@ router.get('/get-items', async (req, res) => {
         res.status(500).json({ message: 'Error fetching items' });
     }
 });
+
 router.get('/get-items-names', async (req, res) => {
     try {
         const items = await Item.find({}, { itemName: 1, sizesCategories: 1, _id: 1 });
