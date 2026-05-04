@@ -1,7 +1,7 @@
 const express = require('express');
 const Buyer = require('../../modulesDB/buyers');
 const Order = require('../../modulesDB/order');
-const item = require('../../modulesDB/items');
+const Item = require('../../modulesDB/Items');
 const DailyPack = require('../../modulesDB/dailypack');
 const Order_Item = require('../../modulesDB/orderItems');
 const router = express.Router();
@@ -391,7 +391,7 @@ async function getItams(OrderItems) {
 }
 
 async function getitemname(params) {
-    const itemname = await item.findOne({ _id: params }, { itemName: 1 })
+    const itemname = await Item.findOne({ _id: params }, { itemName: 1 })
 
 
     return itemname.itemName
