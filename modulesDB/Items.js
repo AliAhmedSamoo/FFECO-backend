@@ -34,5 +34,5 @@ const modulee = new mongoose.Schema({
 });
 
 
-const DBmodule = new mongoose.model('Item', modulee)
+const DBmodule = new mongoose.model('item', modulee)
 module.exports = DBmodule;
