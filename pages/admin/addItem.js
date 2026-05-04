@@ -1,5 +1,5 @@
 const express = require('express');
-const item = require('../../modulesDB/items');
+const Item = require('../../modulesDB/items');
 const router = express.Router();
 
 // POST route to add an item
@@ -12,7 +12,7 @@ router.post('/add-items', (req, res) => {
 
 
 
-        const newItem = new item({
+        const newItem = new Item({
             itemName,
             marketPrice,
             sizesCategories,
@@ -38,7 +38,7 @@ router.post('/add-items', (req, res) => {
 
 router.get('/get-items', async (req, res) => {
     try {
-        const items = await item.find();
+        const items = await Item.find();
         res.json(items);
     } catch (error) {
         console.error('Error fetching items:', error);
@@ -47,7 +47,7 @@ router.get('/get-items', async (req, res) => {
 });
 router.get('/get-items-names', async (req, res) => {
     try {
-        const items = await item.find({}, { itemName: 1, sizesCategories: 1, _id: 1 });
+        const items = await Item.find({}, { itemName: 1, sizesCategories: 1, _id: 1 });
 
 
         const response = items.map(v => ({ value: v.itemName, _id: v._id,size:v.sizesCategories }));
