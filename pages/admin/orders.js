@@ -1,5 +1,5 @@
 const express = require('express');
-const Buyer = require('./../../modulesDB/Buyers');
+const Buyer = require('./../../modulesDB/Buyers.js');
 // const Order = require('./../../modulesDB/Order');
 // const Item = require('./../../modulesDB/Items');
 // const DailyPack = require('./../../modulesDB/Dailypack');
