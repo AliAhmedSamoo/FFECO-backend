@@ -18,7 +18,7 @@ app.get('/', (req, res) => {
 });
 
 
-app.use(require('./pages/admin/addItem'));
+// app.use(require('./pages/admin/addItem'));
 app.use(require('./pages/admin/vendor'));
 app.use(require('./pages/admin/orders'));
 app.use(require('./pages/batch'));
