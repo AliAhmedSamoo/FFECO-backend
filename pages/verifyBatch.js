@@ -70,7 +70,7 @@ router.get('/get-batch', async (req, res) => {
     }
 });
 
-
+app.get('/favicon.ico', (req, res) => res.status(204));
 
 
 router.post('/get-batch-item-Gradings', async (req, res) => {

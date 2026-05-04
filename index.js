@@ -16,13 +16,13 @@ app.get('/', (req, res) => {
     const date = Date.now();
     res.send("Server is running new " + date);
 });
+app.get('/favicon.ico', (req, res) => res.status(204));
 
-
-app.use(require('./pages/admin/addItem'));
-app.use(require('./pages/admin/vendor'));
-app.use(require('./pages/admin/orders'));
-app.use(require('./pages/batch'));
-app.use(require('./pages/verifyBatch'));
+// app.use(require('./pages/admin/addItem'));
+// app.use(require('./pages/admin/vendor'));
+// app.use(require('./pages/admin/orders'));
+// app.use(require('./pages/batch'));
+// app.use(require('./pages/verifyBatch'));
 
 // app.use('/additem', additem);
 
