@@ -2,7 +2,7 @@ const express = require('express');
 const Batch = require('../modulesDB/batch')
 const Fish = require('../modulesDB/fish')
 const Item = require('../modulesDB/Items')
-const Vendor = require('../modulesDB/Vendor')
+const Vendor = require('../modulesDB/vendor')
 const VerifiedFishes = require('../modulesDB/verifiedFishes')
 const router = express.Router();
 
@@ -70,7 +70,7 @@ router.get('/get-batch', async (req, res) => {
     }
 });
 
-app.get('/favicon.ico', (req, res) => res.status(204));
+
 
 
 router.post('/get-batch-item-Gradings', async (req, res) => {
