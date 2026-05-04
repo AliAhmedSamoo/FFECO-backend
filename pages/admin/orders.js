@@ -1,9 +1,9 @@
 const express = require('express');
-const Buyer = require('../../modulesDB/buyers');
-const Order = require('../../modulesDB/order');
+const Buyer = require('../../modulesDB/Buyers');
+const Order = require('../../modulesDB/Order');
 const Item = require('../../modulesDB/Items');
-const DailyPack = require('../../modulesDB/dailypack');
-const Order_Item = require('../../modulesDB/orderItems');
+const DailyPack = require('../../modulesDB/Dailypack');
+const Order_Item = require('../../modulesDB/OrderItems');
 const router = express.Router();
 
 
