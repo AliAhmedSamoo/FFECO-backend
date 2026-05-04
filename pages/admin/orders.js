@@ -1,6 +1,6 @@
 const express = require('express');
 const Buyer = require('../../modulesDB/Buyers');
-const Order = require('../../modulesDB/Order');
+// const Order = require('../../modulesDB/Order');
 // const Item = require('../../modulesDB/Items');
 // const DailyPack = require('../../modulesDB/Dailypack');
 // const Order_Item = require('../../modulesDB/OrderItems');
@@ -344,56 +344,56 @@ const router = express.Router();
 // })
 
 
-async function getItams(OrderItems) {
-    const acc = {};
+// async function getItams(OrderItems) {
+//     const acc = {};
 
-    for (const curr of OrderItems) {
-        if (!acc[curr.ItemName]) {
-            acc[curr.ItemName] = {
-                ItemName: curr.ItemName,
-                TotalWieght: 0,
-                totalcartons: 0,
-                items: []
-            };
-        }
+//     for (const curr of OrderItems) {
+//         if (!acc[curr.ItemName]) {
+//             acc[curr.ItemName] = {
+//                 ItemName: curr.ItemName,
+//                 TotalWieght: 0,
+//                 totalcartons: 0,
+//                 items: []
+//             };
+//         }
 
-        // calculate current item weight
-        const weight = (curr.TotalCartons || 0) * (curr.WeightperCartons || 0);
+//         // calculate current item weight
+//         const weight = (curr.TotalCartons || 0) * (curr.WeightperCartons || 0);
 
-        // add to total
-        acc[curr.ItemName].TotalWieght += weight;
-        // calculate current item weight
-        const totalcartons = (parseInt(curr.TotalCartons) || 0);
+//         // add to total
+//         acc[curr.ItemName].TotalWieght += weight;
+//         // calculate current item weight
+//         const totalcartons = (parseInt(curr.TotalCartons) || 0);
 
-        acc[curr.ItemName].totalcartons += totalcartons;
+//         acc[curr.ItemName].totalcartons += totalcartons;
 
-        const nameactualname = await getitemname(curr.ItemName);
+//         const nameactualname = await getitemname(curr.ItemName);
 
-        const itemtoadd = {
-            FISHNAME: `${nameactualname} ${nameactualname !== curr.ExportItemName ? "(" + curr.ExportItemName + ")" : ""} ${curr.Process} ${curr.FishGrading[curr.FishGrading.length - 1].R1}-${curr.FishGrading[curr.FishGrading.length - 1].R2}${curr.FishGrading[curr.FishGrading.length - 1].unit} ${curr.Frezeas} ${curr.pcperCartons ? "(" + curr.pcperCartons + " PCs)" : ""}`,
-            SIZEANDPACKING: `${curr.PACKas === "Single PC" ? "Single PC" : curr.PACKGrading[curr.PACKGrading.length - 1].grading + curr.PACKGrading[curr.PACKGrading.length - 1].unit} ${curr.Frezeas === "BLOCK" || curr.Frezeas === "FORM TRAY" ? curr.Frezeas : ""} ${curr.PACKas === "Single PC" ? "" : curr.PACKas}`,
-            // SIZEANDPACKING: curr.PACKGrading[curr.PACKGrading.length - 1].grading + curr.PACKGrading[curr.PACKGrading.length - 1].unit + " " + curr.PACKas,
-            CARTONS: curr.TotalCartons,
-            WperC: curr.WeightperCartons
-        };
+//         const itemtoadd = {
+//             FISHNAME: `${nameactualname} ${nameactualname !== curr.ExportItemName ? "(" + curr.ExportItemName + ")" : ""} ${curr.Process} ${curr.FishGrading[curr.FishGrading.length - 1].R1}-${curr.FishGrading[curr.FishGrading.length - 1].R2}${curr.FishGrading[curr.FishGrading.length - 1].unit} ${curr.Frezeas} ${curr.pcperCartons ? "(" + curr.pcperCartons + " PCs)" : ""}`,
+//             SIZEANDPACKING: `${curr.PACKas === "Single PC" ? "Single PC" : curr.PACKGrading[curr.PACKGrading.length - 1].grading + curr.PACKGrading[curr.PACKGrading.length - 1].unit} ${curr.Frezeas === "BLOCK" || curr.Frezeas === "FORM TRAY" ? curr.Frezeas : ""} ${curr.PACKas === "Single PC" ? "" : curr.PACKas}`,
+//             // SIZEANDPACKING: curr.PACKGrading[curr.PACKGrading.length - 1].grading + curr.PACKGrading[curr.PACKGrading.length - 1].unit + " " + curr.PACKas,
+//             CARTONS: curr.TotalCartons,
+//             WperC: curr.WeightperCartons
+//         };
 
-        acc[curr.ItemName].items.push(itemtoadd);
-    }
+//         acc[curr.ItemName].items.push(itemtoadd);
+//     }
 
-    const itemtosend = Object.values(acc);
-
-
+//     const itemtosend = Object.values(acc);
 
 
 
 
-    return itemtosend
-}
-
-async function getitemname(params) {
-    const itemname = await Item.findOne({ _id: params }, { itemName: 1 })
 
 
-    return itemname.itemName
-}
+//     return itemtosend
+// }
+
+// async function getitemname(params) {
+//     const itemname = await Item.findOne({ _id: params }, { itemName: 1 })
+
+
+//     return itemname.itemName
+// }
 module.exports = router;
