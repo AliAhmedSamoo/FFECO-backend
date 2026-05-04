@@ -1,6 +1,6 @@
 const express = require('express');
 const Batch = require('../modulesDB/batch')
-const Fish = require('../modulesDB/fish')
+const Fish = require('../modulesDB/Fish')
 const item = require('../modulesDB/Items')
 const Vendor = require('../modulesDB/Vendor')
 const VerifiedFishes = require('../modulesDB/verifiedFishes')
