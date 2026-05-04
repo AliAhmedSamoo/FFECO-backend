@@ -1,7 +1,7 @@
 const express = require('express');
 const Batch = require('../modulesDB/batch')
 const Fish = require('../modulesDB/fish')
-const Item = require('../modulesDB/Items')
+const item = require('../modulesDB/Items')
 const Vendor = require('../modulesDB/Vendor')
 const VerifiedFishes = require('../modulesDB/verifiedFishes')
 const router = express.Router();
@@ -91,7 +91,7 @@ router.post('/get-batch-item-Gradings', async (req, res) => {
 
 
 
-        const items = await Item.findOne({ _id: itemID }, { sizesCategories_FFECO: 1, _id: 0 });
+        const items = await item.findOne({ _id: itemID }, { sizesCategories_FFECO: 1, _id: 0 });
 
 
         const ffecograding = items.sizesCategories_FFECO.map(size => ({ value: size }))
