@@ -7,7 +7,7 @@ const Order_Item = require('../../modulesDB/orderItems');
 const router = express.Router();
 
 
- 
+
 
 router.post('/add-buyer', async (req, res) => {
     try {
@@ -124,19 +124,20 @@ router.get('/get-order', async (req, res) => {
     try {
         const { date } = req.query
         let data = []
-        const orders = await Order.find({}, { Buyer: 1, oderID: 1 })
+        const orders = await Order.find({}, { Buyer: 1, oderID: 1 }).sort({ timestamp: -1 })
 
         await Promise.all(
 
-            orders.map(async (value) => {
+            await orders.map(async (value) => {
 
                 const buyer = await Buyer.findOne({ _id: value.Buyer }, { FullName: 1, information: 1, logo: 1, Shortname: 1 })
-                const Order_Items = await Order_Item.find({ orderID: value._id },{numberofCT:1,CartonsWieght:1})
-                const packing = await DailyPack.find({ orderID: value._id },{numberofCT:1,CartonsWieght:1})
-                console.log(packing)
+                const Order_Items = await Order_Item.find({ orderId: value._id }, { TotalCartons: 1 })
+                const packing = await DailyPack.find({ orderID: value._id }, { numberofCT: 1 })
+                const TotalCarton = Order_Items.reduce((sum, item) => sum + parseInt(item.TotalCartons), 0)
+                const FullFilled = packing.reduce((sum, item) => sum + parseInt(item.numberofCT), 0)
 
-                const TotalCarton = 100
-                const FullFilled = 120
+
+                // const FullFilled = 120
 
 
                 const resss = {
@@ -154,19 +155,7 @@ router.get('/get-order', async (req, res) => {
                 await data.push(resss)
             })
         )
-        // const buyer = [
-        //     {
-        //         Order: "MSAG 03",
-        //         logo: "/logo.png",
-        //         Fullname: "/logo.png",
-        //         TotalCarton: 50,
-        //         FullFilled: 50,
-        //         Requried: 50,
-        //         progress: (50 / 50) * 100,
-        //         information: [{ value: "/logo.png" }, { value: "/logo.png" }]
-        //     },
 
-        // ]
         res.status(201).json(data);
 
     } catch (error) {
@@ -338,8 +327,53 @@ router.get('/getnamesfordailypacking', async (req, res) => {
 
         res.status(201).json(response);
     } catch (error) {
-        console.error('Error adding order-item:', error);
-        res.status(500).json({ message: 'Error adding order-item' });
+        console.error('Error ageting name for daily packaging:', error);
+        res.status(500).json({ message: 'Error ageting name for daily packaging' });
+    }
+})
+
+
+router.post('/get-dailypackaging', async (req, res) => {
+    const { date, orderID, orderName } = req.body
+
+    try {
+        const OrderItems = await Order_Item.find({ orderId: orderID })
+
+
+
+
+        const Items = await getItamsfordailypacking(OrderItems, date)
+
+
+        const Pre_CTN = Items.reduce((sum, item) => {
+            return sum + (parseInt(item.Pre_CTN) || 0);
+        }, 0);
+        const Pre_KG = Items.reduce((sum, item) => {
+            return sum + (parseInt(item.Pre_KG) || 0);
+        }, 0);
+        const CTN = Items.reduce((sum, item) => {
+            return sum + (parseInt(item.CTN) || 0);
+        }, 0);
+        const KG = Items.reduce((sum, item) => {
+            return sum + (parseInt(item.KG) || 0);
+        }, 0);
+       
+
+        const responce = {
+            Order: orderName,
+            Items,
+            Pre_CTN,
+            Pre_KG,
+            CTN,
+            KG,
+            total_CTN: CTN + Pre_CTN,
+            total_KG: KG + Pre_KG,
+        }
+        res.status(201).json(responce);
+    }
+    catch (error) {
+        console.error('Error ageting name for daily packaging:', error);
+        res.status(500).json({ message: 'Error ageting name for daily packaging' });
     }
 })
 
@@ -370,7 +404,7 @@ async function getItams(OrderItems) {
         const nameactualname = await getitemname(curr.ItemName);
 
         const itemtoadd = {
-            FISHNAME: `${nameactualname} ${nameactualname !== curr.ExportItemName ? "(" + curr.ExportItemName + ")" : ""} ${curr.Process} ${curr.FishGrading[curr.FishGrading.length - 1].R1}-${curr.FishGrading[curr.FishGrading.length - 1].R2}${curr.FishGrading[curr.FishGrading.length - 1].unit} ${curr.Frezeas} ${curr.pcperCartons ? "(" + curr.pcperCartons + " PCs)" : ""}`,
+            FISHNAME: `${nameactualname} ${nameactualname !== curr.ExportItemName ? "(" + curr.ExportItemName + ")" : ""} ${curr.Process} ${curr.FishGrading[curr.FishGrading.length - 1].R1}-${curr.FishGrading[curr.FishGrading.length - 1].R2}${curr.FishGrading[curr.FishGrading.length - 1].R1 ? curr.FishGrading[curr.FishGrading.length - 1].unit : ""} ${curr.Frezeas === "I.Q.F" ? curr.Frezeas : ""} ${curr.pcperCartons ? "(" + curr.pcperCartons + " PCs)" : ""}`,
             SIZEANDPACKING: `${curr.PACKas === "Single PC" ? "Single PC" : curr.PACKGrading[curr.PACKGrading.length - 1].grading + curr.PACKGrading[curr.PACKGrading.length - 1].unit} ${curr.Frezeas === "BLOCK" || curr.Frezeas === "FORM TRAY" ? curr.Frezeas : ""} ${curr.PACKas === "Single PC" ? "" : curr.PACKas}`,
             // SIZEANDPACKING: curr.PACKGrading[curr.PACKGrading.length - 1].grading + curr.PACKGrading[curr.PACKGrading.length - 1].unit + " " + curr.PACKas,
             CARTONS: curr.TotalCartons,
@@ -395,5 +429,129 @@ async function getitemname(params) {
 
 
     return itemname.itemName
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+async function getItamsfordailypacking(OrderItems, date) {
+    const acc = {};
+
+    for (const curr of OrderItems) {
+        if (!acc[curr.ItemName]) {
+            acc[curr.ItemName] = {
+                ItemName: curr.ItemName,
+                TotalWieght: 0,
+                Pre_CTN: 0,
+                Pre_KG: 0,
+                CTN: 0,
+                KG: 0,
+                total_CTN: 0,
+                total_KG: 0,
+                items: []
+            };
+        }
+
+
+
+        const startDate = new Date(date + "T00:00:00.000+00:00");
+        const nextDate = new Date(date + "T23:59:59.999+00:00");
+
+        const prevStartDate = new Date(startDate);
+        prevStartDate.setDate(prevStartDate.getDate() - 1);
+
+        const prevEndDate = new Date(startDate);
+        prevEndDate.setMilliseconds(prevEndDate.getMilliseconds() - 1);
+
+
+        const predailyPack = await DailyPack.find({
+            ItemID: curr._id,
+            timestamp: {
+                $gte: prevStartDate,
+                $lte: prevEndDate
+            }
+        });
+
+
+        // Current Day
+        const dailyPack = await DailyPack.find({
+            ItemID: curr._id,
+            timestamp: {
+                $gte: startDate,
+                $lte: nextDate
+            }
+        });
+
+        // console.log(predailyPack);
+        // console.log(dailyPack);
+
+
+        const Pre_CTN = predailyPack.reduce((sum, item) => {
+            return sum + (parseInt(item.numberofCT) || 0);
+        }, 0);
+
+        acc[curr.ItemName].Pre_CTN += Pre_CTN;
+
+
+        const Pre_KG = predailyPack.reduce((sum, item) => {
+            return sum + (parseInt(item.CartonsWieght) || 0);
+        }, 0);
+
+        acc[curr.ItemName].Pre_KG += Pre_KG;
+
+
+        const CTN = dailyPack.reduce((sum, item) => {
+            return sum + (parseInt(item.numberofCT) || 0);
+        }, 0);
+
+        acc[curr.ItemName].CTN += CTN;
+
+
+        const KG = dailyPack.reduce((sum, item) => {
+            return sum + (parseInt(item.CartonsWieght) || 0);
+        }, 0);
+
+        acc[curr.ItemName].KG += KG;
+
+        const TotalWieght = KG + Pre_KG
+        acc[curr.ItemName].TotalWieght += TotalWieght;
+
+
+
+        const nameactualname = await getitemname(curr.ItemName);
+
+        const itemtoadd = {
+            FISHNAME: `${nameactualname} ${nameactualname !== curr.ExportItemName ? "(" + curr.ExportItemName + ")" : ""} ${curr.Process} ${curr.FishGrading[curr.FishGrading.length - 1].R1}-${curr.FishGrading[curr.FishGrading.length - 1].R2}${curr.FishGrading[curr.FishGrading.length - 1].R1 ? curr.FishGrading[curr.FishGrading.length - 1].unit : ""} ${curr.Frezeas === "I.Q.F" ? curr.Frezeas : ""} ${curr.pcperCartons ? "(" + curr.pcperCartons + " PCs)" : ""} ${curr.PACKas === "Single PC" ? "Single PC" : curr.PACKGrading[curr.PACKGrading.length - 1].grading + curr.PACKGrading[curr.PACKGrading.length - 1].unit} ${curr.Frezeas === "BLOCK" || curr.Frezeas === "FORM TRAY" ? curr.Frezeas : ""} ${curr.PACKas === "Single PC" ? "" : curr.PACKas}`,
+            Pre_CTN: Pre_CTN,
+            Pre_KG: Pre_KG,
+            CTN: CTN,
+            KG: KG,
+            total_CTN: CTN + Pre_CTN,
+            total_KG: KG + Pre_KG,
+
+        };
+
+        acc[curr.ItemName].items.push(itemtoadd);
+    }
+
+    const itemtosend = Object.values(acc);
+
+
+
+
+
+
+    return itemtosend
 }
 module.exports = router;
