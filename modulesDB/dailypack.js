@@ -16,7 +16,7 @@ const modulee = new mongoose.Schema({
 
 
 
-    timestamp: { type: Date, default: Date.now }
+    timestamp: { type: Date,  default: () => new Date(Date.now() - 24 * 60 * 60 * 1000) }
 
 
 

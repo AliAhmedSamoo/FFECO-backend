@@ -357,7 +357,7 @@ router.post('/get-dailypackaging', async (req, res) => {
         const KG = Items.reduce((sum, item) => {
             return sum + (parseInt(item.KG) || 0);
         }, 0);
-       
+
 
         const responce = {
             Order: orderName,
@@ -475,16 +475,15 @@ async function getItamsfordailypacking(OrderItems, date) {
         prevEndDate.setMilliseconds(prevEndDate.getMilliseconds() - 1);
 
 
+        
         const predailyPack = await DailyPack.find({
             ItemID: curr._id,
             timestamp: {
-                $gte: prevStartDate,
-                $lte: prevEndDate
+                $lte: startDate
             }
         });
 
-
-        // Current Day
+        
         const dailyPack = await DailyPack.find({
             ItemID: curr._id,
             timestamp: {
@@ -493,9 +492,7 @@ async function getItamsfordailypacking(OrderItems, date) {
             }
         });
 
-        // console.log(predailyPack);
-        // console.log(dailyPack);
-
+      
 
         const Pre_CTN = predailyPack.reduce((sum, item) => {
             return sum + (parseInt(item.numberofCT) || 0);
