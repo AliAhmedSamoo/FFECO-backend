@@ -48,8 +48,8 @@ router.get('/get-vendors-names', async (req, res) => {
     console.log("Fetching vendor names...");
     try {
 
-        const vendors = await Vendor.find({}, { vendorName: 1, _id: 1 });
-        const response = vendors.map(v => ({ value: v.vendorName, _id: v._id }));
+        const vendors = await Vendor.find({}, { vendorName: 1, _id: 1,vendorPhone:1 });
+        const response = vendors.map(v => ({ value: v.vendorName, _id: v._id, phone: v.vendorPhone }));
         res.json(response);
         console.log(response);
 
