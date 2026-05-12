@@ -149,7 +149,7 @@ router.get('/get-order', async (req, res) => {
                     TotalCarton: TotalCarton,
                     FullFilled: FullFilled,
                     Requried: TotalCarton - FullFilled,
-                    progress: ((FullFilled / TotalCarton) * 100).toFixed(1),
+                    progress: ((FullFilled || 0 / TotalCarton || 0) * 100).toFixed(1),
                 }
 
                 await data.push(resss)

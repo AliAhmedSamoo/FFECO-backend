@@ -195,7 +195,7 @@ router.get('/get-purchase-list', async (req, res) => {
         const data = []
         const inventoryItems = await Cartonroomitems.find().sort({ timestamp: -1 });
 
-        await Promise.all(inventoryItems.map(async (item) => {
+        await Promise.all(await inventoryItems.map(async (item) => {
 
             const stock = await Cartonroominevnt.findOne({ itemID: item._id });
 
@@ -333,18 +333,18 @@ router.post('/istockin', async (req, res) => {
 
                 let stokin = thisstockexist.Stockin
                 await stokin.push({
-                            // Assuming these are the array fields in your schema
-                            stockinpo: stockinpo,
-                            stockinItems: item,
-                            stockinWarehouse: stockinWarehouse,
-                            stockinremarks: stockinremarks,
-                            stockinpocompalted: stockinpocompalted
-                        })
+                    // Assuming these are the array fields in your schema
+                    stockinpo: stockinpo,
+                    stockinItems: item,
+                    stockinWarehouse: stockinWarehouse,
+                    stockinremarks: stockinremarks,
+                    stockinpocompalted: stockinpocompalted
+                })
                 await Cartonroominevnt.updateOne(
                     { itemID: item._id },
                     {
-                        $set: { Stock: stok,Stockin: stokin}, // Safely adds the new amount to current stock
-                        
+                        $set: { Stock: stok, Stockin: stokin }, // Safely adds the new amount to current stock
+
                     }
                 );
             } else {

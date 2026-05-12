@@ -1,7 +1,10 @@
 const mongoose = require("mongoose");
 
 const uri = "mongodb://admin:admin@ac-u5bdorw-shard-00-00.ddpi0ha.mongodb.net:27017,ac-u5bdorw-shard-00-01.ddpi0ha.mongodb.net:27017,ac-u5bdorw-shard-00-02.ddpi0ha.mongodb.net:27017/YOUR_DB_NAME?ssl=true&replicaSet=atlas-j1i9ns-shard-0&authSource=admin&appName=FFECO";
-mongoose.connect(uri).then(() => {
+mongoose.connect(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+}).then(() => {
     console.log("Connection is successful with DataBase");
 }).catch((err) => {
     console.log("Connection error: ", err);
