@@ -10,6 +10,7 @@ const modulee = new mongoose.Schema({
     itemID: { type: String },
     Stock: { type: String },
     Required: { type: String },
+    Stockin: { type: Array },
 
 
     timestamp: { type: Date, default: Date.now }

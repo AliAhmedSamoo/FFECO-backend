@@ -13,11 +13,15 @@ const modulee = new mongoose.Schema({
         type: String,
 
     },
-    items:{
+    items: {
         type: Array,
     },
-    POnumber:{
+    POnumber: {
         type: String,
+    },
+    status: {
+        type: Boolean,
+        default: false
     },
 
 

@@ -27,7 +27,9 @@ router.get('/get-carton-room-inventory', async (req, res) => {
                 name: `${item.name ? item.name + " - " : ''} ${item.dimensions ? item.dimensions + "-" : ""}  ${item.micron ? item.micron + "μ - " : ''}  ${item.ply ? item.ply + "ply - " : ''} ${item.color ? item.color : ''} ${item.party ? "- " + item.party : ''}`,
                 type: item.type,
                 party: item.party,
-                status: stock?.Stock < 20 || stock?.Stock < stock?.Required ? "Restock Required" : "Okay",
+                status: (Number(stock?.Stock || 0) < 19) || (Number(stock?.Stock || 0) < Number(stock?.Required || 0))
+                    ? "Restock Required"
+                    : "Okay",
                 stock: stock?.Stock || "0",
             })
         }
@@ -202,6 +204,7 @@ router.get('/get-purchase-list', async (req, res) => {
 
             const isinorder = await Purchaseorder.find({
                 "items._id": iddd,
+                status: false
             });
 
             let howmanyinrder = 0
@@ -217,17 +220,11 @@ router.get('/get-purchase-list', async (req, res) => {
 
 
 
-            let required = 20 + parseInt(stock?.Required) - parseInt(howmanyinrder) - parseInt(stock?.Stock)
-
-
+            let required = 20 + parseInt(stock?.Required || 0) - parseInt(howmanyinrder) - parseInt(stock?.Stock || 0)
 
             if (required > 0) {
 
-                console.log("in order", parseInt(howmanyinrder))
-                console.log("in stock", parseInt(stock?.Stock))
-                console.log("req",parseInt(stock?.Required))
-                console.log("to oder",required)
-                console.log("")
+
 
                 await data.push({
                     _id: item._id,
@@ -248,6 +245,150 @@ router.get('/get-purchase-list', async (req, res) => {
         res.status(500).json({ message: 'Error fetching carton room inventory' });
     }
 });
+
+
+
+router.get('/get-purchase-ordered', async (req, res) => {
+
+    try {
+
+        let response = []
+
+        const purchaseOrder = await Purchaseorder.find();
+
+
+        if (purchaseOrder?.length > 0) {
+
+
+            await Promise.all(purchaseOrder?.map(async (items) => {
+                let itm = []
+
+                const vendor = await Vendor.findById(items.vendor);
+
+                await Promise.all(items.items.map(async (item) => {
+
+                    const inventoryItem = await Cartonroomitems.findById(item._id);
+
+                    itm.push({
+                        item: inventoryItem ? `${inventoryItem.name ? inventoryItem.name + " - " : ''} ${inventoryItem.dimensions ? inventoryItem.dimensions + "-" : ""}  ${inventoryItem.micron ? inventoryItem.micron + "μ - " : ''}  ${inventoryItem.ply ? inventoryItem.ply + "ply - " : ''} ${inventoryItem.color ? inventoryItem.color : ''} ${inventoryItem.party ? "- " + inventoryItem.party : ''}` : 'Unknown Item',
+                        _id: item._id,
+                        priceperunit: parseInt(item.priceperunit),
+                        required: parseInt(item.required),
+                        Received: item.Received || 0
+                    })
+                }
+                ))
+
+                await response.push({
+                    _id: items._id,
+                    vendor,
+                    items: itm,
+                    POnumber: items.POnumber,
+                    status: items.status,
+                    timestamp: items.timestamp,
+                })
+            }))
+        }
+
+
+
+        res.status(200).json(response);
+
+    } catch (error) {
+        console.error('Error fetching purchase order:', error);
+        res.status(500).json({ message: 'Error fetching purchase order' });
+    }
+});
+
+
+router.post('/istockin', async (req, res) => {
+
+    const {
+        stockinpo,
+        stockinItems,
+        stockinWarehouse,
+        stockinremarks,
+        stockinpocompalted
+    } = req.body
+
+    try {
+        const po = await Purchaseorder.findById(stockinpo)
+        let poitems = []
+
+
+
+
+        await Promise.all(stockinItems.map(async (item) => {
+            let poitem = po.items.find((vale) => vale._id === item._id)
+
+
+            poitem.required = stockinpocompalted ? poitem.required : poitem.required - item.required
+            poitem.Received = item.required
+            await poitems.push(poitem)
+
+            const thisstockexist = await Cartonroominevnt.findOne({ itemID: item._id })
+
+            if (thisstockexist) {
+                const stok = parseInt(thisstockexist.Stock) + parseInt(item.required)
+
+                let stokin = thisstockexist.Stockin
+                await stokin.push({
+                            // Assuming these are the array fields in your schema
+                            stockinpo: stockinpo,
+                            stockinItems: item,
+                            stockinWarehouse: stockinWarehouse,
+                            stockinremarks: stockinremarks,
+                            stockinpocompalted: stockinpocompalted
+                        })
+                await Cartonroominevnt.updateOne(
+                    { itemID: item._id },
+                    {
+                        $set: { Stock: stok,Stockin: stokin}, // Safely adds the new amount to current stock
+                        
+                    }
+                );
+            } else {
+
+                const data = new Cartonroominevnt({
+                    itemID: item._id,
+                    Stock: item.required,
+                    Stockin: {
+                        stockinpo: [stockinpo],
+                        stockinItems: [stockinItems],
+                        stockinWarehouse: [stockinWarehouse],
+                        stockinremarks: [stockinremarks],
+                        stockinpocompalted: [stockinpocompalted]
+                    }
+
+                })
+
+                await data.save()
+
+            }
+
+        }))
+
+        await Purchaseorder.updateOne(
+            { _id: stockinpo },
+            {
+                $set: {
+                    items: poitems,
+                    status: stockinpocompalted
+                }
+            }
+        );
+
+
+
+        res.status(200).json({ message: 'StockIN' });
+
+
+
+    } catch (error) {
+        console.error('Error in StockIN:', error);
+        res.status(500).json({ message: 'Error in StockIN' });
+    }
+})
 // Here you would typically save the data to your database
 
 module.exports = router;
