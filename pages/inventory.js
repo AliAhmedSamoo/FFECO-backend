@@ -19,8 +19,7 @@ router.get('/get-carton-room-inventory', async (req, res) => {
 
 
             const stock = await Cartonroominevnt.findOne({ itemID: item._id });
-            console.log(stock)
-
+          
             await data.push({
                 id: item._id,
                 item: item.item,
@@ -387,6 +386,77 @@ router.post('/istockin', async (req, res) => {
     } catch (error) {
         console.error('Error in StockIN:', error);
         res.status(500).json({ message: 'Error in StockIN' });
+    }
+})
+
+
+router.get('/getitemsforstockout', async (req, res) => {
+
+
+    try {
+        let data = []
+
+
+        const Items = await Cartonroominevnt.find({
+            Stock: { $gt: 0 }
+        });
+        await Promise.all(await Items.map(async (value) => {
+
+            const inventoryItem = await Cartonroomitems.findOne({ _id: value.itemID })
+
+            await data.push({
+                value: inventoryItem ? `${inventoryItem.name ? inventoryItem.name + " - " : ''} ${inventoryItem.dimensions ? inventoryItem.dimensions + "-" : ""}  ${inventoryItem.micron ? inventoryItem.micron + "μ - " : ''}  ${inventoryItem.ply ? inventoryItem.ply + "ply - " : ''} ${inventoryItem.color ? inventoryItem.color : ''} ${inventoryItem.party ? "- " + inventoryItem.party : ''} - ${inventoryItem.item}` : 'Unknown Item',
+                _id: value.itemID
+            })
+
+        }))
+        res.status(200).json(data);
+
+
+
+    } catch (error) {
+        console.error('Error in getitemsforstockout:', error);
+        res.status(500).json({ message: 'Error in getitemsforstockout' });
+    }
+})
+
+
+router.post('/istockOut', async (req, res) => {
+
+    console.log(req.body)
+
+    const stockout = parseInt(req.body.stockout)
+   const {itemsID}=req.body
+
+    try {
+
+        const itm =await Cartonroominevnt.findOne({ itemID: itemsID },{Stock:1})
+        const newstock = parseInt(itm.Stock) - stockout
+
+      
+        await Cartonroominevnt.updateOne(
+            { itemID: req.body.itemsID },
+            {
+                $set: {
+                    Stock: newstock,
+                },
+                $push: {
+                    StockOut: {
+                        date: Date.now(),
+                        stockout: stockout,
+                    },
+                },
+            }
+        );
+
+
+        res.status(200).json({ message: 'StockOUT' });
+
+
+
+    } catch (error) {
+        console.error('Error in StockOUT:', error);
+        res.status(500).json({ message: 'Error in StockOUT' });
     }
 })
 // Here you would typically save the data to your database

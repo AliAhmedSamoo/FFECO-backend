@@ -11,6 +11,7 @@ const modulee = new mongoose.Schema({
     Stock: { type: String },
     Required: { type: String },
     Stockin: { type: Array },
+    StockOut: { type: Array },
 
 
     timestamp: { type: Date, default: Date.now }
