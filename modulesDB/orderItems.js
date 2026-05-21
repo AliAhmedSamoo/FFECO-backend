@@ -55,6 +55,10 @@ const modulee = new mongoose.Schema({
         type: String,
 
     },
+    loaclgradings: {
+        type: String,
+
+    },
 
     timestamp: { type: Date, default: Date.now }
 
