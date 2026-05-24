@@ -125,14 +125,38 @@ router.get('/get-order', async (req, res) => {
         const { date } = req.query
         let data = []
         const orders = await Order.find({ oderID: { $ne: "loose" } }, { Buyer: 1, oderID: 1 }).sort({ timestamp: -1 })
+        const buyersid = [...new Set(orders.map(value => value.Buyer))];
+        const buyers = await Buyer.find({ _id: { $in: buyersid } }, { FullName: 1, information: 1, logo: 1, Shortname: 1 })
+
+        const orderids = [...new Set(orders.map(value => value._id))];
+        const Order_Ite = await Order_Item.find({ orderId: { $in: orderids } }, { TotalCartons: 1, orderId: 1 })
+
+        const dailypack = await DailyPack.find({ orderID: { $in: orderids } }, { numberofCT: 1, orderID: 1 })
+
 
         await Promise.all(
 
             await orders.map(async (value) => {
 
-                const buyer = await Buyer.findOne({ _id: value.Buyer }, { FullName: 1, information: 1, logo: 1, Shortname: 1 })
-                const Order_Items = await Order_Item.find({ orderId: value._id }, { TotalCartons: 1 })
-                const packing = await DailyPack.find({ orderID: value._id }, { numberofCT: 1 })
+                // const buyer = await Buyer.findOne({ _id: value.Buyer }, { FullName: 1, information: 1, logo: 1, Shortname: 1 })
+                const buyer = buyers.find(
+                    (val) => val._id.toString() === value.Buyer.toString()
+                );
+
+                // const Order_Items = await Order_Item.find({ orderId: value._id }, { TotalCartons: 1 })
+
+                const Order_Items = Order_Ite.filter(
+                    (val) => val.orderId.toString() === value._id.toString()
+                );
+
+                // const packing = await DailyPack.find({ orderID: value._id }, { numberofCT: 1 })
+
+                const packing = dailypack.filter(
+                    (val) => val.orderID.toString() === value._id.toString()
+                );
+
+
+
                 const TotalCarton = Order_Items.reduce((sum, item) => sum + parseInt(item.TotalCartons), 0)
                 const FullFilled = packing.reduce((sum, item) => sum + parseInt(item.numberofCT), 0)
 
@@ -170,7 +194,7 @@ router.get('/get-order', async (req, res) => {
 router.post('/add-orderByID', async (req, res) => {
     try {
         const { _id } = req.body
-        const order = await Order.findOne({ _id }, { Buyer: 1, oderID: 1, DOP: 1, DOE: 1 })
+        const order = await Order.findOne({ _id }, { Buyer: 1, oderID: 1, DOP: 1, DOE: 1,RefNo:1,LOTNo:1 })
 
         const buyer = await Buyer.findOne({ _id: order.Buyer }, { Shortname: 1 })
 
@@ -183,13 +207,15 @@ router.post('/add-orderByID', async (req, res) => {
 
 
         const totalCartons = await itemtosend.reduce((sum, item) => sum + item.totalcartons, 0);
-        //    console.log(itemtosend)
+      
         const totalWeight = await itemtosend.reduce((sum, item) => sum + item.TotalWieght, 0);
 
         let orderinfo = {
             name: buyer.Shortname + " " + order.oderID,
             DOP: order.DOP,
             DOE: order.DOE,
+            LOTNo:order.LOTNo,
+            RefNo:order.RefNo,
             Items: itemtosend,
             TotalCarton: totalCartons,
             TotalWieght: totalWeight,
@@ -445,6 +471,13 @@ router.post('/get-dailypackaging', async (req, res) => {
 async function getItams(OrderItems) {
     const acc = {};
 
+    const ids = OrderItems.map(item => item.ItemName);
+    
+    const fishes = await Item.find({
+        _id: { $in: ids }
+    }, { itemName: 1 });
+
+
     for (const curr of OrderItems) {
         if (!acc[curr.ItemName]) {
             acc[curr.ItemName] = {
@@ -465,7 +498,9 @@ async function getItams(OrderItems) {
 
         acc[curr.ItemName].totalcartons += totalcartons;
 
-        const nameactualname = await getitemname(curr.ItemName);
+        const nameactualname = fishes.find(
+            (val) => String(val._id) === String(curr.ItemName)
+        )?.itemName;
 
         const itemtoadd = {
             FISHNAME: `${nameactualname} ${nameactualname !== curr.ExportItemName ? "(" + curr.ExportItemName + ")" : ""} ${curr.Process} ${curr.FishGrading[curr.FishGrading.length - 1].R1}-${curr.FishGrading[curr.FishGrading.length - 1].R2}${curr.FishGrading[curr.FishGrading.length - 1].R1 ? curr.FishGrading[curr.FishGrading.length - 1].unit : ""} ${curr.Frezeas === "I.Q.F" ? curr.Frezeas : ""} ${curr.pcperCartons ? "(" + curr.pcperCartons + " PCs)" : ""}`,
@@ -634,7 +669,7 @@ async function getItamsfordailypacking(OrderItems, date) {
             FISHNAME: `${nameactualname}${nameactualname !== curr.ExportItemName && curr.ExportItemName
                 ? ` (${curr.ExportItemName})`
                 : ""
-                } ${curr.loaclgradings === undefined? "":curr.loaclgradings}
+                } ${curr.loaclgradings === undefined ? "" : curr.loaclgradings}
                 
                 ${curr.Process || ""} ${curr.FishGrading?.length
                     ? `${curr.FishGrading[curr.FishGrading.length - 1].R1 || ""}${curr.FishGrading[curr.FishGrading.length - 1].R2
