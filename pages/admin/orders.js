@@ -194,7 +194,7 @@ router.get('/get-order', async (req, res) => {
 router.post('/add-orderByID', async (req, res) => {
     try {
         const { _id } = req.body
-        const order = await Order.findOne({ _id }, { Buyer: 1, oderID: 1, DOP: 1, DOE: 1,RefNo:1,LOTNo:1 })
+        const order = await Order.findOne({ _id }, { Buyer: 1, oderID: 1, DOP: 1, DOE: 1, RefNo: 1, LOTNo: 1 })
 
         const buyer = await Buyer.findOne({ _id: order.Buyer }, { Shortname: 1 })
 
@@ -207,15 +207,15 @@ router.post('/add-orderByID', async (req, res) => {
 
 
         const totalCartons = await itemtosend.reduce((sum, item) => sum + item.totalcartons, 0);
-      
+
         const totalWeight = await itemtosend.reduce((sum, item) => sum + item.TotalWieght, 0);
 
         let orderinfo = {
             name: buyer.Shortname + " " + order.oderID,
             DOP: order.DOP,
             DOE: order.DOE,
-            LOTNo:order.LOTNo,
-            RefNo:order.RefNo,
+            LOTNo: order.LOTNo,
+            RefNo: order.RefNo,
             Items: itemtosend,
             TotalCarton: totalCartons,
             TotalWieght: totalWeight,
@@ -246,25 +246,46 @@ router.post('/add-order-item', async (req, res) => {
             PACKGrading,
             TotalCartons,
             WeightperCartons,
-            pcperCartons
+            pcperCartons,
+            edititrm
         } = req.body
 
         console.log(pcperCartons)
-        const newOrderItem = new Order_Item({
-            orderId,
-            ItemName,
-            ExportItemName,
-            Process,
-            FishGrading,
-            Frezeas,
-            PACKas,
-            PACKGrading,
-            TotalCartons,
-            WeightperCartons,
-            pcperCartons
-        });
 
-        await newOrderItem.save();
+        if (edititrm === "") {
+
+            const newOrderItem = new Order_Item({
+                orderId,
+                ItemName,
+                ExportItemName,
+                Process,
+                FishGrading,
+                Frezeas,
+                PACKas,
+                PACKGrading,
+                TotalCartons,
+                WeightperCartons,
+                pcperCartons
+            });
+
+            await newOrderItem.save();
+        } else {
+            await Order_Item.findByIdAndUpdate(edititrm, {
+                orderId,
+                ItemName,
+                ExportItemName,
+                Process,
+                FishGrading,
+                Frezeas,
+                PACKas,
+                PACKGrading,
+                TotalCartons,
+                WeightperCartons,
+                pcperCartons
+            });
+
+        }
+
 
         res.status(201).json({
             message: "order added successfully",
@@ -273,6 +294,19 @@ router.post('/add-order-item', async (req, res) => {
         console.error('Error adding order-item:', error);
         res.status(500).json({ message: 'Error adding order-item' });
     }
+})
+
+
+router.post('/delete-order-item', async (req, res) => {
+    const {id}  = req.body
+    try {
+        await Order_Item.findByIdAndDelete(id);
+        res.status(200).json({ message: "Order item deleted successfully" });
+    } catch (error) {
+        console.error('Error deleting order-item:', error);
+        res.status(500).json({ message: 'Error deleting order-item' });
+    }
+
 })
 
 
@@ -466,13 +500,33 @@ router.post('/get-dailypackaging', async (req, res) => {
 })
 
 
+router.post('/get-itemforedit', async (req, res) => {
+    const { id } = req.body;
 
+    try {
+        const item = await Order_Item.findById(id);
+
+        const fish = await Item.findById(item.ItemName);
+
+
+        const data = {
+            data: item,
+            itemName: { value: fish.itemName, _id: fish._id }
+        }
+
+        res.status(200).json(data);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error' });
+    }
+});
 
 async function getItams(OrderItems) {
     const acc = {};
 
     const ids = OrderItems.map(item => item.ItemName);
-    
+
     const fishes = await Item.find({
         _id: { $in: ids }
     }, { itemName: 1 });
@@ -482,6 +536,7 @@ async function getItams(OrderItems) {
         if (!acc[curr.ItemName]) {
             acc[curr.ItemName] = {
                 ItemName: curr.ItemName,
+
                 TotalWieght: 0,
                 totalcartons: 0,
                 items: []
@@ -507,6 +562,7 @@ async function getItams(OrderItems) {
             SIZEANDPACKING: `${curr.PACKas === "Single PC" ? "Single PC" : curr.PACKGrading[curr.PACKGrading.length - 1].grading + curr.PACKGrading[curr.PACKGrading.length - 1].unit} ${curr.Frezeas === "BLOCK" || curr.Frezeas === "FORM TRAY" ? curr.Frezeas : ""} ${curr.PACKas === "Single PC" ? "" : curr.PACKas}`,
             // SIZEANDPACKING: curr.PACKGrading[curr.PACKGrading.length - 1].grading + curr.PACKGrading[curr.PACKGrading.length - 1].unit + " " + curr.PACKas,
             CARTONS: curr.TotalCartons,
+            _id: curr._id,
             WperC: curr.WeightperCartons
         };
 

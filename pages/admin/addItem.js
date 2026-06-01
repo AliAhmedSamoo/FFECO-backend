@@ -52,8 +52,7 @@ router.get('/get-items-names', async (req, res) => {
 
         const response = items.map(v => ({ value: v.itemName, _id: v._id,size:v.sizesCategories }));
         res.json(response);
-        console.log(response);
-
+      
         // const response = items.map(i => ({ value: i.itemName, _id: i._id }));
         // res.json(response);
     } catch (error) {
