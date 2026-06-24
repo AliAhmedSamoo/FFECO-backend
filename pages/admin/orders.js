@@ -126,7 +126,7 @@ router.get('/get-order', async (req, res) => {
         let data = []
         const orders = await Order.find({ oderID: { $ne: "loose" } }, { Buyer: 1, oderID: 1 }).sort({ timestamp: -1 })
         const buyersid = [...new Set(orders.map(value => value.Buyer))];
-        const buyers = await Buyer.find({ _id: { $in: buyersid } }, { FullName: 1, information: 1, logo: 1, Shortname: 1 })
+        const buyers = await Buyer.find({ _id: { $in: buyersid } }, { FullName: 1, information: 1, Shortname: 1 })
 
         const orderids = [...new Set(orders.map(value => value._id))];
         const Order_Ite = await Order_Item.find({ orderId: { $in: orderids } }, { TotalCartons: 1, orderId: 1 })
@@ -168,7 +168,7 @@ router.get('/get-order', async (req, res) => {
                     _id: value._id,
                     Fullname: buyer.FullName,
                     information: buyer.information,
-                    logo: buyer.logo,
+                    // logo: buyer.logo,
                     Order: buyer.Shortname + " " + value.oderID,
                     TotalCarton: TotalCarton,
                     FullFilled: FullFilled,
@@ -298,7 +298,7 @@ router.post('/add-order-item', async (req, res) => {
 
 
 router.post('/delete-order-item', async (req, res) => {
-    const {id}  = req.body
+    const { id } = req.body
     try {
         await Order_Item.findByIdAndDelete(id);
         res.status(200).json({ message: "Order item deleted successfully" });
@@ -372,7 +372,7 @@ router.get('/getnamesfordailypacking', async (req, res) => {
 
         const fishes = await Item.find({
             _id: { $in: ids }
-        }, { itemName: 1 });
+        }, { itemName: 1, WeightperCartons: 1 });
 
 
 
@@ -437,6 +437,7 @@ router.get('/getnamesfordailypacking', async (req, res) => {
                 value: `${nametopush} ${SIZEANDPACKING}`.replace(/\s+/g, " ").trim(),
                 _id: item._id,
                 orderId: id,
+                WeightperCartons: item.WeightperCartons,
             });
 
         }))
@@ -451,11 +452,13 @@ router.get('/getnamesfordailypacking', async (req, res) => {
 
 router.post('/get-dailypackaging', async (req, res) => {
     const { date, orderID, orderName } = req.body
-
+  
     try {
 
         const OrderItems = await Order_Item.find({ orderId: orderID })
 
+
+       
         const Items = await getItamsfordailypacking(OrderItems, date)
 
 
@@ -480,6 +483,7 @@ router.post('/get-dailypackaging', async (req, res) => {
 
 
         const responce = {
+            _id:orderID,
             Order: orderName,
             Items,
             Pre_CTN,
